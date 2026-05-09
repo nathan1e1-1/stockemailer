@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alphastream"
+version = "0.1.0"
+description = "Personal AlphaStream Intelligence Bot"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "PyYAML>=6.0.1,<7",
+  "python-dotenv>=1.0.1,<2",
+  "requests>=2.32.3,<3",
+  "vaderSentiment>=3.3.2,<4",
+  "yfinance>=0.2.54,<0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "detect-secrets>=1.5.0,<2",
+  "pip-audit>=2.7.3,<3",
+  "pytest>=9.0.3,<10",
+]
+
+[project.scripts]
+alphastream = "alphastream.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
