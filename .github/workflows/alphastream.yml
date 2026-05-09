@@ -1,0 +1,100 @@
+name: AlphaStream Weekly Run
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 11,12 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  weekly-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.13"
+
+      - name: Enforce Monday 7 AM New York runtime
+        id: wallclock
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          now = datetime.now(ZoneInfo("America/New_York"))
+          should_run = now.weekday() == 0 and now.hour == 7
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+              handle.write(f"should_run={'true' if should_run else 'false'}\n")
+          print(f"New York time: {now.isoformat()} | should_run={should_run}")
+          PY
+
+      - name: Install dependencies
+        if: steps.wallclock.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Prepare state branch checkout
+        if: steps.wallclock.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" alphastream-state >/dev/null 2>&1; then
+            git clone --depth 1 --branch alphastream-state "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" state-worktree
+          else
+            mkdir -p state-worktree/state
+            cd state-worktree
+            git init
+            git checkout --orphan alphastream-state
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            touch .gitkeep
+            git add .gitkeep state
+            git commit -m "chore: initialize state branch"
+            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            git push origin alphastream-state
+          fi
+          mkdir -p state-worktree/state
+
+      - name: Run AlphaStream
+        if: steps.wallclock.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          ALPHASTREAM_EMAIL_FROM: ${{ secrets.ALPHASTREAM_EMAIL_FROM }}
+          ALPHASTREAM_EMAIL_PROVIDER: ${{ secrets.ALPHASTREAM_EMAIL_PROVIDER }}
+          ALPHASTREAM_EMAIL_TO: ${{ secrets.ALPHASTREAM_EMAIL_TO }}
+          ALPHASTREAM_FINNHUB_API_KEY: ${{ secrets.ALPHASTREAM_FINNHUB_API_KEY }}
+          ALPHASTREAM_FMP_API_KEY: ${{ secrets.ALPHASTREAM_FMP_API_KEY }}
+          ALPHASTREAM_SMTP_HOST: ${{ secrets.ALPHASTREAM_SMTP_HOST }}
+          ALPHASTREAM_SMTP_PASSWORD: ${{ secrets.ALPHASTREAM_SMTP_PASSWORD }}
+          ALPHASTREAM_SMTP_PORT: ${{ secrets.ALPHASTREAM_SMTP_PORT }}
+          ALPHASTREAM_SMTP_USERNAME: ${{ secrets.ALPHASTREAM_SMTP_USERNAME }}
+          ALPHASTREAM_STATE_DIR: state-worktree/state
+        run: alphastream --config-dir config
+
+      - name: Persist state branch
+        if: (steps.wallclock.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch') && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd state-worktree
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state
+          if git diff --cached --quiet; then
+            echo "No state changes to persist."
+            exit 0
+          fi
+          git commit -m "chore: update AlphaStream state"
+          if ! git remote | grep -q '^origin$'; then
+            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+          git push origin HEAD:alphastream-state

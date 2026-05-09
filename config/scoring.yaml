@@ -1,0 +1,11 @@
+scoring:
+  market_cap_min: 500000000
+  weights:
+    institutional: 0.4
+    sentiment: 0.3
+    technical: 0.3
+  thresholds:
+    conviction_increase_pct: 10.0
+    lookback_hours: 48
+    overbought_rsi: 70.0
+    strong_signal: 80

@@ -1,0 +1,36 @@
+strategies:
+  ai_tech:
+    label: AI Tech
+    sectors:
+      - Technology
+      - Semiconductors
+      - Software
+      - Communication Services
+    keywords:
+      - ai
+      - cloud
+      - semiconductor
+      - software
+      - data center
+  energy_play:
+    label: Energy Play
+    sectors:
+      - Energy
+      - Utilities
+      - Industrials
+    keywords:
+      - power
+      - utility
+      - grid
+      - nuclear
+      - oil
+  value_rotation:
+    label: Value Rotation
+    sectors:
+      - Healthcare
+      - Financial Services
+      - Financials
+    keywords:
+      - healthcare
+      - bank
+      - insurance
