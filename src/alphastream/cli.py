@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
-from alphastream.config import load_config
+from alphastream.config import ConfigError, load_config
 from alphastream.email.senders import ConsoleEmailSender, SMTPEmailSender
 from alphastream.providers.fixture_filings import LocalFixtureFilingProvider
 from alphastream.providers.filings import FMPFilingProvider
@@ -23,7 +24,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    config = load_config(args.config_dir)
+    try:
+        config = load_config(args.config_dir)
+    except ConfigError as error:
+        print(f"Configuration error: {error}", file=sys.stderr)
+        return 1
     filing_provider = (
         LocalFixtureFilingProvider(Path(config.fixture_file))
         if config.filing_provider == "fixture"
