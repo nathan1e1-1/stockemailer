@@ -1,0 +1,92 @@
+[
+  {
+    "ticker": "NVDA",
+    "company_name": "NVIDIA Corporation",
+    "investor_id": "1067983",
+    "investor_name": "Berkshire Hathaway",
+    "is_new_position": true,
+    "stake_increase_pct": 12.5,
+    "reported_value": 1000000,
+    "sector": "Technology"
+  },
+  {
+    "ticker": "MSFT",
+    "company_name": "Microsoft Corporation",
+    "investor_id": "1040273",
+    "investor_name": "Third Point",
+    "is_new_position": true,
+    "stake_increase_pct": 11.0,
+    "reported_value": 980000,
+    "sector": "Technology"
+  },
+  {
+    "ticker": "VST",
+    "company_name": "Vistra Corp.",
+    "investor_id": "1336528",
+    "investor_name": "Pershing Square",
+    "is_new_position": false,
+    "stake_increase_pct": 15.0,
+    "reported_value": 850000,
+    "sector": "Utilities"
+  },
+  {
+    "ticker": "CEG",
+    "company_name": "Constellation Energy Corporation",
+    "investor_id": "1536411",
+    "investor_name": "Duquesne Family Office",
+    "is_new_position": false,
+    "stake_increase_pct": 13.0,
+    "reported_value": 810000,
+    "sector": "Utilities"
+  },
+  {
+    "ticker": "UNH",
+    "company_name": "UnitedHealth Group Incorporated",
+    "investor_id": "1029160",
+    "investor_name": "Soros Fund Management",
+    "is_new_position": false,
+    "stake_increase_pct": 6.0,
+    "reported_value": 760000,
+    "sector": "Healthcare"
+  },
+  {
+    "ticker": "JPM",
+    "company_name": "JPMorgan Chase & Co.",
+    "investor_id": "1061768",
+    "investor_name": "The Baupost Group",
+    "is_new_position": false,
+    "stake_increase_pct": 9.0,
+    "reported_value": 730000,
+    "sector": "Financials"
+  },
+  {
+    "ticker": "GOOGL",
+    "company_name": "Alphabet Inc.",
+    "investor_id": "1135730",
+    "investor_name": "Coatue Management",
+    "is_new_position": true,
+    "stake_increase_pct": 18.0,
+    "reported_value": 920000,
+    "sector": "Communication Services"
+  },
+  {
+    "ticker": "AMZN",
+    "company_name": "Amazon.com, Inc.",
+    "investor_id": "1167483",
+    "investor_name": "Tiger Global Management",
+    "is_new_position": false,
+    "stake_increase_pct": 14.0,
+    "reported_value": 875000,
+    "sector": "Consumer Discretionary"
+  },
+  {
+    "ticker": "META",
+    "company_name": "Meta Platforms, Inc.",
+    "investor_id": "1103804",
+    "investor_name": "Viking Global Investors",
+    "is_new_position": false,
+    "stake_increase_pct": 8.0,
+    "reported_value": 790000,
+    "sector": "Communication Services"
+  }
+]

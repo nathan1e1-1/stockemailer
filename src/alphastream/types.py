@@ -56,15 +56,22 @@ class RankedPick:
     company_name: str
     investor_name: str
     strategy_label: str
-    summary: str
+    whale_note: str
+    sentiment_note: str
     trend_note: str
+    market_cap: float
+    current_price: float
+    moving_average_200: float
+    rsi_14: float
     score: ScoreBreakdown
+    section: str = "top_pick"
 
 
 @dataclass(frozen=True)
 class EmailReport:
     picks: list[RankedPick]
     generated_on: str
+    timezone_name: str = "America/New_York"
 
 
 @dataclass(frozen=True)
@@ -80,3 +87,4 @@ class RunResult:
     sent_count: int
     skipped_count: int
     errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)

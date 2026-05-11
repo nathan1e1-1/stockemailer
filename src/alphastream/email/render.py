@@ -2,34 +2,94 @@ from __future__ import annotations
 
 from html import escape
 
-from alphastream.types import RankedPick
+from alphastream.types import EmailReport, RankedPick
 
 
-def render_email(picks: list[RankedPick]) -> str:
-    items = []
-    for pick in picks:
-        items.append(
-            f"""
-            <section style="padding:16px 0;border-bottom:1px solid #e5e7eb;">
-              <h2 style="margin:0 0 8px;font-size:20px;">{escape(pick.ticker)} - {escape(pick.company_name)}</h2>
-              <p style="margin:4px 0;"><strong>Score:</strong> {pick.score.total_score}/100 ({escape(pick.score.signal_label)})</p>
-              <p style="margin:4px 0;"><strong>The Whale:</strong> {escape(pick.investor_name)}</p>
-              <p style="margin:4px 0;"><strong>Sentiment:</strong> {escape(pick.summary)}</p>
-              <p style="margin:4px 0;"><strong>Trend:</strong> {escape(pick.trend_note)}</p>
-              <p style="margin:4px 0;"><strong>Strategy:</strong> {escape(pick.strategy_label)}</p>
-            </section>
-            """
+def _format_market_cap(value: float) -> str:
+    if value >= 1_000_000_000:
+        return f"${value / 1_000_000_000:.2f}B"
+    if value >= 1_000_000:
+        return f"${value / 1_000_000:.1f}M"
+    return f"${value:,.0f}"
+
+
+def _format_price(value: float) -> str:
+    return f"${value:,.2f}"
+
+
+def _render_pick_card(pick: RankedPick) -> str:
+    badge_background = "#e2fbe8" if pick.section == "top_pick" else "#fff7db"
+    badge_foreground = "#166534" if pick.section == "top_pick" else "#92400e"
+    return f"""
+        <section style="padding:20px 0;border-bottom:1px solid #e5e7eb;">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+            <div>
+              <h3 style="margin:0 0 8px;font-size:20px;line-height:1.2;">{escape(pick.ticker)} - {escape(pick.company_name)}</h3>
+              <p style="margin:0 0 8px;color:#334155;"><strong>Strategy:</strong> {escape(pick.strategy_label)}</p>
+            </div>
+            <div style="background:{badge_background};color:{badge_foreground};border-radius:999px;padding:8px 12px;font-weight:600;white-space:nowrap;">
+              {pick.score.total_score}/100
+            </div>
+          </div>
+          <p style="margin:6px 0;"><strong>Signal:</strong> {escape(pick.score.signal_label)}</p>
+          <p style="margin:6px 0;"><strong>The Whale:</strong> {escape(pick.investor_name)}. {escape(pick.whale_note)}</p>
+          <p style="margin:6px 0;"><strong>Sentiment:</strong> {escape(pick.sentiment_note)}</p>
+          <p style="margin:6px 0;"><strong>Trend:</strong> {escape(pick.trend_note)}</p>
+          <table role="presentation" style="width:100%;margin-top:12px;border-collapse:collapse;font-size:14px;">
+            <tr>
+              <td style="padding:8px;border:1px solid #e5e7eb;"><strong>Market Cap</strong><br>{_format_market_cap(pick.market_cap)}</td>
+              <td style="padding:8px;border:1px solid #e5e7eb;"><strong>Price</strong><br>{_format_price(pick.current_price)}</td>
+              <td style="padding:8px;border:1px solid #e5e7eb;"><strong>200D MA</strong><br>{_format_price(pick.moving_average_200)}</td>
+              <td style="padding:8px;border:1px solid #e5e7eb;"><strong>RSI</strong><br>{pick.rsi_14:.1f}</td>
+            </tr>
+          </table>
+          <p style="margin:12px 0 0;"><strong>Score Breakdown:</strong> Institutional Conviction {pick.score.institutional_score}, News Sentiment {pick.score.sentiment_score}, Technical Trend {pick.score.technical_score}</p>
+        </section>
+        """
+
+
+def _render_section(title: str, description: str, picks: list[RankedPick]) -> str:
+    if not picks:
+        return ""
+    cards = "".join(_render_pick_card(pick) for pick in picks)
+    return f"""
+      <section style="margin-top:24px;">
+        <h2 style="margin:0 0 8px;font-size:22px;">{escape(title)}</h2>
+        <p style="margin:0 0 4px;color:#475569;">{escape(description)}</p>
+        {cards}
+      </section>
+    """
+
+
+def render_email(report: EmailReport) -> str:
+    top_picks = [pick for pick in report.picks if pick.section == "top_pick"]
+    watchlist = [pick for pick in report.picks if pick.section == "watchlist"]
+    if not report.picks:
+        sections = "<p style=\"margin:0;\">No high-conviction picks passed the filters this run.</p>"
+    else:
+        sections = (
+            _render_section(
+                "Top Picks",
+                "Highest-conviction names from the current filing, sentiment, and technical ranking model.",
+                top_picks,
+            )
+            + _render_section(
+                "Watchlist",
+                "Lower-conviction names that still cleared the base filters and are worth monitoring.",
+                watchlist,
+            )
         )
-    sections = "".join(items) or "<p style=\"margin:0;\">No high-conviction picks passed the filters this run.</p>"
     return f"""
     <!DOCTYPE html>
     <html lang="en">
       <body style="margin:0;padding:24px;background:#f8fafc;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
         <main style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;padding:24px;">
-          <h1 style="margin-top:0;">AlphaStream Weekly Picks</h1>
+          <h1 style="margin-top:0;">AlphaStream Weekday Picks</h1>
+          <p style="margin:0 0 8px;color:#475569;">Run date: {escape(report.generated_on)} ({escape(report.timezone_name)})</p>
+          <p style="margin:0 0 20px;color:#475569;">High-conviction ideas ranked from institutional conviction, recent news sentiment, and technical trend checks.</p>
           {sections}
           <p style="margin-top:24px;font-size:13px;color:#475569;">
-            Informational only. AlphaStream is a read-only research assistant and does not place trades or provide fiduciary advice.
+            Top Picks are the strongest-ranked names. Watchlist names cleared the base filters but scored lower than the top section. Informational only. AlphaStream is a read-only research assistant and does not place trades or provide fiduciary advice.
           </p>
         </main>
       </body>

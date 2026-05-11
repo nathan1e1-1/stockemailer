@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 
-from alphastream.types import CandidateSignal
+from alphastream.types import CandidateSignal, RankedPick
 
 
 def classify_strategy(sector: str, text: str, sector_map: dict[str, dict[str, object]]) -> str | None:
@@ -33,3 +34,26 @@ def filter_candidates(
             continue
         filtered.append(candidate)
     return filtered
+
+
+def partition_ranked_picks(
+    ranked_picks: list[RankedPick],
+    *,
+    top_pick_min_score: int,
+    watchlist_min_score: int,
+    max_top_picks: int,
+    target_total_picks: int,
+) -> list[RankedPick]:
+    top_picks = [
+        replace(pick, section="top_pick")
+        for pick in ranked_picks
+        if pick.score.total_score >= top_pick_min_score
+    ][:max_top_picks]
+    selected_tickers = {pick.ticker for pick in top_picks}
+    remaining_slots = max(target_total_picks - len(top_picks), 0)
+    watchlist = [
+        replace(pick, section="watchlist")
+        for pick in ranked_picks
+        if pick.ticker not in selected_tickers and pick.score.total_score >= watchlist_min_score
+    ][:remaining_slots]
+    return top_picks + watchlist

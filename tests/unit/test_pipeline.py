@@ -1,7 +1,7 @@
 from datetime import date
 
-from alphastream.pipeline import classify_strategy, filter_candidates
-from alphastream.types import CandidateSignal, FilingPosition, Headline, MarketSnapshot
+from alphastream.pipeline import classify_strategy, filter_candidates, partition_ranked_picks
+from alphastream.types import CandidateSignal, FilingPosition, Headline, MarketSnapshot, RankedPick, ScoreBreakdown
 
 
 def build_candidate(ticker: str, sector: str, market_cap: float, strategy_label: str) -> CandidateSignal:
@@ -57,3 +57,83 @@ def test_filter_candidates_applies_market_cap_and_recent_send_dedupe() -> None:
     )
 
     assert [candidate.filing.ticker for candidate in filtered] == ["KEEP"]
+
+
+def test_partition_ranked_picks_creates_top_picks_and_watchlist_to_target_size() -> None:
+    ranked = [
+        RankedPick(
+            ticker="AAA",
+            company_name="AAA Inc.",
+            investor_name="Fund A",
+            strategy_label="AI Tech",
+            whale_note="New position opened",
+            sentiment_note="Positive",
+            trend_note="Bullish",
+            market_cap=1_000_000_000.0,
+            current_price=100.0,
+            moving_average_200=90.0,
+            rsi_14=55.0,
+            section="unassigned",
+            score=ScoreBreakdown(total_score=100, signal_label="Strong Signal", institutional_score=100, sentiment_score=100, technical_score=100),
+        ),
+        RankedPick(
+            ticker="BBB",
+            company_name="BBB Inc.",
+            investor_name="Fund B",
+            strategy_label="Energy Play",
+            whale_note="Position increased by 15.0%",
+            sentiment_note="Positive",
+            trend_note="Bullish",
+            market_cap=900_000_000.0,
+            current_price=90.0,
+            moving_average_200=85.0,
+            rsi_14=58.0,
+            section="unassigned",
+            score=ScoreBreakdown(total_score=85, signal_label="Strong Signal", institutional_score=100, sentiment_score=50, technical_score=100),
+        ),
+        RankedPick(
+            ticker="CCC",
+            company_name="CCC Inc.",
+            investor_name="Fund C",
+            strategy_label="Value Rotation",
+            whale_note="Position increased by 5.0%",
+            sentiment_note="Neutral",
+            trend_note="Mixed",
+            market_cap=850_000_000.0,
+            current_price=75.0,
+            moving_average_200=76.0,
+            rsi_14=61.0,
+            section="unassigned",
+            score=ScoreBreakdown(total_score=65, signal_label="Watch", institutional_score=0, sentiment_score=100, technical_score=100),
+        ),
+        RankedPick(
+            ticker="DDD",
+            company_name="DDD Inc.",
+            investor_name="Fund D",
+            strategy_label="AI Tech",
+            whale_note="Position increased by 4.0%",
+            sentiment_note="Neutral",
+            trend_note="Mixed",
+            market_cap=820_000_000.0,
+            current_price=60.0,
+            moving_average_200=61.0,
+            rsi_14=63.0,
+            section="unassigned",
+            score=ScoreBreakdown(total_score=50, signal_label="Watch", institutional_score=0, sentiment_score=50, technical_score=100),
+        ),
+    ]
+
+    selected = partition_ranked_picks(
+        ranked,
+        top_pick_min_score=80,
+        watchlist_min_score=50,
+        max_top_picks=2,
+        target_total_picks=4,
+    )
+
+    assert [(pick.ticker, pick.section) for pick in selected] == [
+        ("AAA", "top_pick"),
+        ("BBB", "top_pick"),
+        ("CCC", "watchlist"),
+        ("DDD", "watchlist"),
+    ]

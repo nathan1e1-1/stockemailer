@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 import yfinance as yf
@@ -30,8 +31,14 @@ class YFinanceMarketDataProvider:
 
     def fetch_snapshot(self, ticker: str) -> MarketSnapshot:
         stock = yf.Ticker(ticker)
-        info = stock.info
-        history = stock.history(period=self.history_period, auto_adjust=False)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=r".*Timestamp\.utcnow is deprecated.*",
+                category=Warning,
+            )
+            info = stock.info
+            history = stock.history(period=self.history_period, auto_adjust=False)
         closes = [float(value) for value in history["Close"].tolist() if value == value]
         if not closes:
             raise RuntimeError(f"No market history available for {ticker}")

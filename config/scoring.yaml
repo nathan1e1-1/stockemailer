@@ -1,5 +1,6 @@
 scoring:
   market_cap_min: 500000000
+  report_timezone: America/New_York
   weights:
     institutional: 0.4
     sentiment: 0.3
@@ -9,3 +10,9 @@ scoring:
     lookback_hours: 48
     overbought_rsi: 70.0
     strong_signal: 80
+  selection:
+    dedupe_days: 7
+    target_total_picks: 8
+    max_top_picks: 5
+    top_pick_min_score: 80
+    watchlist_min_score: 50

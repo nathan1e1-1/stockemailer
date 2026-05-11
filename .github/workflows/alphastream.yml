@@ -1,9 +1,9 @@
-name: AlphaStream Weekly Run
+name: AlphaStream Weekday Run
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 11,12 * * 1"
+    - cron: "0 11,12 * * 1-5"
 
 permissions:
   contents: write
@@ -22,16 +22,17 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Enforce Monday 7 AM New York runtime
+      - name: Enforce weekday 7 AM New York runtime
         id: wallclock
         run: |
-          python - <<'PY'
+          PYTHONPATH=src python - <<'PY'
           import os
           from datetime import datetime
           from zoneinfo import ZoneInfo
+          from alphastream.schedule import should_send_weekday_email
 
           now = datetime.now(ZoneInfo("America/New_York"))
-          should_run = now.weekday() == 0 and now.hour == 7
+          should_run = should_send_weekday_email(now)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
               handle.write(f"should_run={'true' if should_run else 'false'}\n")
           print(f"New York time: {now.isoformat()} | should_run={should_run}")
@@ -71,8 +72,11 @@ jobs:
           ALPHASTREAM_EMAIL_FROM: ${{ secrets.ALPHASTREAM_EMAIL_FROM }}
           ALPHASTREAM_EMAIL_PROVIDER: ${{ secrets.ALPHASTREAM_EMAIL_PROVIDER }}
           ALPHASTREAM_EMAIL_TO: ${{ secrets.ALPHASTREAM_EMAIL_TO }}
+          ALPHASTREAM_FILING_PROVIDER: sec
           ALPHASTREAM_FINNHUB_API_KEY: ${{ secrets.ALPHASTREAM_FINNHUB_API_KEY }}
           ALPHASTREAM_FMP_API_KEY: ${{ secrets.ALPHASTREAM_FMP_API_KEY }}
+          ALPHASTREAM_REPORT_TIMEZONE: America/New_York
+          ALPHASTREAM_SEC_USER_AGENT: AlphaStreamBot/1.0 (${{ secrets.ALPHASTREAM_EMAIL_FROM }})
           ALPHASTREAM_SMTP_HOST: ${{ secrets.ALPHASTREAM_SMTP_HOST }}
           ALPHASTREAM_SMTP_PASSWORD: ${{ secrets.ALPHASTREAM_SMTP_PASSWORD }}
           ALPHASTREAM_SMTP_PORT: ${{ secrets.ALPHASTREAM_SMTP_PORT }}

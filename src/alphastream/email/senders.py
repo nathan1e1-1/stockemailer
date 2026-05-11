@@ -17,7 +17,7 @@ class EmailSender:
 @dataclass
 class ConsoleEmailSender(EmailSender):
     def send(self, report: EmailReport) -> DeliveryResult:
-        render_email(report.picks)
+        render_email(report)
         return DeliveryResult(success=True, provider_name="console", message_id=str(uuid.uuid4()), error=None)
 
 
@@ -31,9 +31,9 @@ class SMTPEmailSender(EmailSender):
     to_address: str
 
     def send(self, report: EmailReport) -> DeliveryResult:
-        html = render_email(report.picks)
+        html = render_email(report)
         message = EmailMessage()
-        message["Subject"] = "AlphaStream Weekly Picks"
+        message["Subject"] = "AlphaStream Weekday Picks"
         message["From"] = self.from_address
         message["To"] = self.to_address
         message.set_content("AlphaStream weekly picks are available in HTML format.")

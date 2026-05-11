@@ -1,6 +1,6 @@
 # AlphaStream
 
-AlphaStream is a read-only stock intelligence bot that combines 13F filing changes, recent news sentiment, and technical trend checks into a weekly HTML email.
+AlphaStream is a read-only stock intelligence bot that combines 13F filing changes, recent news sentiment, and technical trend checks into a weekday HTML email.
 
 ## Local setup
 
@@ -13,6 +13,14 @@ cp .env.example .env
 pytest
 alphastream --config-dir config
 ```
+
+## Immediate local email test without paid 13F access
+
+Set `ALPHASTREAM_FILING_PROVIDER=fixture` in `.env` and leave `ALPHASTREAM_FIXTURE_FILE=fixtures/demo_filings.json` to use the bundled sample filing. This keeps the real Finnhub, market-data, scoring, and SMTP path, but skips the paid 13F fetch.
+
+## Production filing source
+
+The live automation defaults to `ALPHASTREAM_FILING_PROVIDER=sec`, which reads recent 13F filings from SEC sources and resolves tickers from the SEC company ticker directory. Set `ALPHASTREAM_SEC_USER_AGENT` to a descriptive contact string before using the SEC path.
 
 ## Security notes
 
