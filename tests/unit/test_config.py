@@ -10,7 +10,7 @@ from alphastream.cli import main
 from alphastream.config import ConfigError, load_config
 
 
-CONFIG_DIR = Path("/Users/nthnp/Documents/stockemailer/config")
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 
 
 def test_load_config_defaults_blank_smtp_port_to_587(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
