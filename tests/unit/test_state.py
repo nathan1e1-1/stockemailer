@@ -19,3 +19,10 @@ def test_state_store_persists_last_run(tmp_path: Path) -> None:
 
     assert (tmp_path / "sent_tickers.json").exists()
     assert (tmp_path / "last_run.json").exists()
+
+
+def test_state_store_reads_last_successful_run(tmp_path: Path) -> None:
+    store = FileStateStore(tmp_path)
+    store.record_success(["MSFT"], today=date(2026, 5, 8))
+
+    assert store.get_last_successful_run() == date(2026, 5, 8)

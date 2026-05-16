@@ -29,6 +29,8 @@ class AlphaStreamRunner:
 
     def run(self, today: date | None = None) -> RunResult:
         today = today or date.today()
+        if getattr(self.state_store, "get_last_successful_run", lambda: None)() == today:
+            return RunResult(sent_count=0, skipped_count=0, errors=[], warnings=["A successful report was already sent today."])
         candidate_signals: list[CandidateSignal] = []
         errors: list[str] = []
         warnings: list[str] = []

@@ -21,6 +21,13 @@ class FileStateStore:
         payload = json.loads(self.sent_path.read_text())
         return {ticker: date.fromisoformat(sent_on) for ticker, sent_on in payload.items()}
 
+    def get_last_successful_run(self) -> date | None:
+        if not self.last_run_path.exists():
+            return None
+        payload = json.loads(self.last_run_path.read_text())
+        last_run = payload.get("last_successful_run")
+        return date.fromisoformat(last_run) if last_run else None
+
     def was_sent_recently(self, ticker: str, within_days: int, today: date) -> bool:
         last_sent = self.get_recently_sent().get(ticker.upper())
         return last_sent is not None and (today - last_sent).days < within_days

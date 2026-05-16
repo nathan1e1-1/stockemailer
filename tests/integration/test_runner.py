@@ -69,12 +69,17 @@ class StubMarketProvider:
 class StubStateStore:
     def __init__(self):
         self.recorded = []
+        self.last_successful_run = None
 
     def get_recently_sent(self):
         return {}
 
+    def get_last_successful_run(self):
+        return self.last_successful_run
+
     def record_success(self, tickers, today):
         self.recorded.append((tuple(tickers), today))
+        self.last_successful_run = today
 
 
 class StubEmailSender:
@@ -224,3 +229,29 @@ def test_runner_partitions_top_picks_and_watchlist() -> None:
         ("VST", "top_pick"),
         ("UNH", "watchlist"),
     ]
+
+
+def test_runner_skips_duplicate_send_when_state_already_recorded_for_today() -> None:
+    state_store = StubStateStore()
+    state_store.last_successful_run = date(2026, 5, 8)
+    email_sender = StubEmailSender()
+    runner = AlphaStreamRunner(
+        filing_provider=StubFilingProvider(),
+        news_provider=StubNewsProvider(),
+        market_provider=StubMarketProvider(),
+        state_store=state_store,
+        email_sender=email_sender,
+        investors=[{"id": "berkshire-hathaway", "name": "Berkshire Hathaway"}],
+        sector_map={
+            "ai_tech": {"label": "AI Tech", "sectors": ["Technology"], "keywords": ["ai", "infrastructure"]},
+        },
+        weights={"institutional": 0.4, "sentiment": 0.3, "technical": 0.3},
+        thresholds={"lookback_hours": 48, "overbought_rsi": 70.0, "strong_signal": 80},
+        market_cap_min=500_000_000.0,
+    )
+
+    result = runner.run(today=date(2026, 5, 8))
+
+    assert result.sent_count == 0
+    assert result.skipped_count == 0
+    assert email_sender.sent_reports == []
