@@ -82,7 +82,14 @@ class AlphaStreamRunner:
             max_top_picks=self.max_top_picks,
             target_total_picks=self.target_total_picks,
         )
-        report = EmailReport(picks=picks, generated_on=today.isoformat(), timezone_name=self.report_timezone)
+        report = EmailReport(
+            picks=picks,
+            generated_on=today.isoformat(),
+            timezone_name=self.report_timezone,
+            investors_scanned=len(investor_ids),
+            positions_scanned=len(positions),
+            warnings=warnings,
+        )
         delivery = self.email_sender.send(report)
         if delivery.success:
             self.state_store.record_success([pick.ticker for pick in picks], today=today)
@@ -121,4 +128,7 @@ class AlphaStreamRunner:
             moving_average_200=candidate.market.moving_average_200,
             rsi_14=candidate.market.rsi_14,
             score=score,
+            sector=candidate.market.sector or candidate.filing.sector,
+            headline_summary=(headline.summary if headline and headline.summary else ""),
+            reported_value=candidate.filing.reported_value,
         )

@@ -3,7 +3,7 @@ name: AlphaStream Weekday Run
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 11,12 * * 1-5"
+    - cron: "0 11,12 * * *"
 
 permissions:
   contents: write
@@ -22,17 +22,17 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Enforce weekday 7 AM New York runtime
+      - name: Enforce daily 7 AM New York runtime
         id: wallclock
         run: |
           PYTHONPATH=src python - <<'PY'
           import os
           from datetime import datetime
           from zoneinfo import ZoneInfo
-          from alphastream.schedule import should_send_weekday_email
+          from alphastream.schedule import should_send_daily_email
 
           now = datetime.now(ZoneInfo("America/New_York"))
-          should_run = should_send_weekday_email(now)
+          should_run = should_send_daily_email(now)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
               handle.write(f"should_run={'true' if should_run else 'false'}\n")
           print(f"New York time: {now.isoformat()} | should_run={should_run}")

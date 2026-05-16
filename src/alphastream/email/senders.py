@@ -33,10 +33,10 @@ class SMTPEmailSender(EmailSender):
     def send(self, report: EmailReport) -> DeliveryResult:
         html = render_email(report)
         message = EmailMessage()
-        message["Subject"] = "AlphaStream Weekday Picks"
+        message["Subject"] = "AlphaStream Daily Picks"
         message["From"] = self.from_address
         message["To"] = self.to_address
-        message.set_content("AlphaStream weekly picks are available in HTML format.")
+        message.set_content("AlphaStream daily picks are available in HTML format.")
         message.add_alternative(html, subtype="html")
         try:
             with smtplib.SMTP(self.host, self.port, timeout=20) as smtp:

@@ -25,6 +25,8 @@ class StubFilingProvider:
             )
         ]
 
+    last_errors = ["MPLXP: quote lookup failed"]
+
 
 class StubNewsProvider:
     def fetch_headlines(self, ticker, lookback_hours=48):
@@ -116,9 +118,15 @@ def test_runner_sends_ranked_picks_and_updates_state_on_success() -> None:
     assert result.skipped_count == 0
     assert email_sender.sent_reports[0].picks[0].ticker == "NVDA"
     assert email_sender.sent_reports[0].picks[0].whale_note == "New position opened"
+    assert email_sender.sent_reports[0].picks[0].sector == "Technology"
+    assert email_sender.sent_reports[0].picks[0].headline_summary == "strong outlook"
+    assert email_sender.sent_reports[0].picks[0].reported_value == 1_000_000.0
     assert "Bullish above 200-day MA" in email_sender.sent_reports[0].picks[0].trend_note
+    assert email_sender.sent_reports[0].investors_scanned == 1
+    assert email_sender.sent_reports[0].positions_scanned == 1
+    assert email_sender.sent_reports[0].warnings == ["MPLXP: quote lookup failed"]
     assert state_store.recorded == [(("NVDA",), date(2026, 5, 8))]
-    assert result.warnings == []
+    assert result.warnings == ["MPLXP: quote lookup failed"]
 
 
 def test_runner_does_not_update_state_when_delivery_fails() -> None:

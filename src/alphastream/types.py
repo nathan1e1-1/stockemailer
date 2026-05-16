@@ -64,6 +64,9 @@ class RankedPick:
     moving_average_200: float
     rsi_14: float
     score: ScoreBreakdown
+    sector: str = ""
+    headline_summary: str = ""
+    reported_value: float = 0.0
     section: str = "top_pick"
 
 
@@ -72,6 +75,9 @@ class EmailReport:
     picks: list[RankedPick]
     generated_on: str
     timezone_name: str = "America/New_York"
+    investors_scanned: int = 0
+    positions_scanned: int = 0
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
